@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#11181F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NURA">
+<title>Case File: NURA</title>
+<meta name="description" content="A short point-and-click investigation. A six-year-old has changed overnight. Find out why.">
+<link rel="icon" href="assets/ui/icon.png">
+<link rel="apple-touch-icon" href="assets/ui/icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preload" href="fonts/jersey-10.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="backdrop"></div>
+  <div id="stage" aria-live="polite">
+    <!-- scene -->
+    <div id="scene">
+      <img id="scene-bg" alt="">
+      <div id="hotspots"></div>
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="loc-tag" class="tag"></div>
+      <button id="hint-btn" class="icon-btn" aria-label="Show things to tap"><span class="ico ico-hint"></span></button>
+      <div id="exits"></div>
+    </div>
+
+    <!-- observation toast -->
+    <div id="toast" class="light-panel hidden"></div>
+
+    <!-- item card -->
+    <div id="popup" class="overlay hidden">
+      <div class="dim"></div>
+      <div class="popup-panel">
+        <div class="popup-imgs"></div>
+        <div class="popup-text">
+          <h2 class="popup-title"></h2>
+          <p class="popup-body"></p>
+        </div>
+        <div class="tap-hint dark">Tap to close</div>
+      </div>
+    </div>
+
+    <!-- diary -->
+    <div id="diary" class="overlay hidden">
+      <div class="dim"></div>
+      <img class="book" alt="">
+      <div class="page left"></div>
+      <div class="page right"></div>
+      <button class="page-tap left" aria-label="Previous page"></button>
+      <button class="page-tap right" aria-label="Next page"></button>
+      <div class="diary-foot">
+        <span class="pg"></span>
+      </div>
+      <button class="icon-btn diary-close" aria-label="Close diary"><span class="ico ico-close"></span></button>
+    </div>
+
+    <!-- conversation -->
+    <div id="talk" class="overlay hidden">
+      <img class="talk-bg" alt="">
+      <div class="talk-shade"></div>
+      <img class="talk-sprite" alt="">
+      <div class="talk-log dark-panel"><div class="log-inner"></div><div class="more-hint">Tap to continue</div></div>
+      <div class="talk-choices"></div>
+    </div>
+
+    <!-- full-screen cards: title, time skip, ending -->
+    <div id="card" class="overlay hidden"></div>
+
+    <div id="loading">
+      <div class="load-text">Loading case file... <span id="load-pct">0%</span></div>
+    </div>
+  </div>
+
+  <div id="rotate" class="hidden">
+    <div class="rotate-box">
+      <div class="rotate-icon"></div>
+      <p>Turn your device sideways<br>to play.</p>
+      <button class="choice" id="rotate-dismiss"><span class="lbl">Play anyway</span></button>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

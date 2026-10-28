@@ -156,6 +156,13 @@
     }
   }
 
+  // Once every finding is in hand, point the player at the report button (once).
+  function maybeNudge() {
+    if (has('NUDGED') || !FINDINGS.every((f) => has(f.flag))) return;
+    setFlag('NUDGED');
+    setTimeout(() => note('I have what I need. Time to submit my report.'), 300);
+  }
+
   // ---------- Toast ----------
   let toastTimer;
   function note(text) {
@@ -189,6 +196,7 @@
     p.classList.remove('hidden');
     popupClose = () => {
       p.classList.add('hidden');
+      maybeNudge();
       // Finding the wrapper for the first time moves the story forward.
       if (id === 'wrapper' && S.phase === 'before') timeSkip();
       else if (id === 'nura_box') {
@@ -237,7 +245,7 @@
     if (diary.i > 0) { diary.i--; renderDiary(); }
   });
   $('#diary .dim').addEventListener('click', closeDiary);
-  function closeDiary() { $('#diary').classList.add('hidden'); diary = null; }
+  function closeDiary() { $('#diary').classList.add('hidden'); diary = null; maybeNudge(); }
 
   // ---------- Conversation ----------
   let T = null; // current talk session
@@ -247,7 +255,7 @@
 
   function openTalk(id) {
     const c = CHARACTERS[id];
-    T = { id, c, queue: [], typing: null, after: null };
+    T = { id, c, queue: [], typing: null, after: null, pending: null };
     const sc = SCENES[S.scene];
     const bg = $('.talk-bg', talkEl);
     bg.src = c.sceneOverride || sc.img;
@@ -275,8 +283,7 @@
     talkEl.classList.add('hidden');
     T = null;
     renderScene();
-    // Nudge towards the report button once, after the confession.
-    if (has('CONFESSED') && !has('NUDGED')) { setFlag('NUDGED'); setTimeout(() => note('I have what I need. Time to submit my report.'), 300); }
+    maybeNudge();
   }
 
   function lineKind(t) { return /^\(.*\)$/.test(t.trim()) ? 'act' : 'a'; }
@@ -367,11 +374,11 @@
     choicesEl.className = 'talk-choices';
     choicesEl.innerHTML = '';
     const open = T.c.questions.filter((q) => unlocked(q) && !fullyAsked(q));
-    // Follow-ups first, so the conversation reads on naturally.
-    open.sort((a, b) => (S.asked[key(b)] ? 1 : 0) - (S.asked[key(a)] ? 1 : 0));
+    // A follow-up only appears straight after its own answer, at the top.
+    const p = T.pending;
+    if (p && open.includes(p)) choicesEl.appendChild(choiceBtn(p.follow.q, {}, () => askFollow(p)));
     open.forEach((q) => {
-      if (S.asked[key(q)]) choicesEl.appendChild(choiceBtn(q.follow.q, {}, () => askFollow(q)));
-      else choicesEl.appendChild(choiceBtn(q.q, {}, () => askQuestion(q)));
+      if (q !== p) choicesEl.appendChild(choiceBtn(q.q, {}, () => askQuestion(q)));
     });
     if (!open.length) {
       const hint = el('div', 'no-more', 'Nothing more to ask for now. Keep looking around.');
@@ -384,12 +391,14 @@
   function askQuestion(q) {
     S.asked[key(q)] = true;
     setFlag(q.flag);
+    T.pending = (q.follow && !S.asked[key(q, true)]) ? q : null;
     ask(q.q);
     say(q.a, showQuestions);
   }
 
   function askFollow(q) {
     S.asked[key(q, true)] = true;
+    T.pending = null;
     setFlag(q.follow.flag);
     ask(q.follow.q);
     if (q.follow.confess) {

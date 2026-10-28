@@ -137,7 +137,9 @@ const DIARIES = {
 //   req:    clue(s) needed before the question appears (all of them)
 //   any:    the question appears if ANY of these clues is held
 //   flag:   clue(s) gained by asking
-//   follow: a follow-up line that replaces the question once it's answered
+//   follow: a follow-up offered only straight after this answer. If the player
+//           asks something else instead, the question stays in the list and
+//           asking it again replays the exchange and offers the follow-up again.
 //   confess: ends with the confession
 // Fully asked questions disappear from the list.
 //
@@ -153,7 +155,7 @@ const CHARACTERS = {
       { id: 'football', req: 'DIARY_AFTER',
         q: 'Your diary says Daddy took you to play football.',
         a: ['Uh-huh! Mummy took a picture. I think they like doing things with me now.'],
-        follow: { q: 'Was that the first time?', a: ['No, we always play! Since I was little.', '...I think.'] } },
+        follow: { q: 'Now?', a: ['I mean... always. We always did.'] } },
       { id: 'dino', any: ['DIARY_BEFORE', 'SEEN_GAMES', 'SEEN_DINO'],
         q: 'You used to play a dinosaur game with Grandma.',
         a: ["I did? I don't play dinosaur games. Those are for babies."],

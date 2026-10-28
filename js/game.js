@@ -197,7 +197,8 @@
       }
     };
   }
-  $('#popup').addEventListener('click', () => popupClose && popupClose());
+  // Tap outside the card to close it (same rule as the diary).
+  $('#popup').addEventListener('click', (e) => { if (!e.target.closest('.popup-panel') && popupClose) popupClose(); });
 
   // ---------- Diary ----------
   // Entries are paired into spreads (left | right). The June diary holds the
@@ -227,15 +228,14 @@
     fill($('.page.right', d), R);
     const prev = i > 0 ? '\u25c0 tap left page' : '';
     const next = i < n - 1 ? 'tap right page \u25b6' : '';
-    $('.pg', d).textContent = [prev, `${i + 1} / ${n}`, next].filter(Boolean).join('    ');
+    $('.pg', d).textContent = [prev, `${i + 1} / ${n}`, next].filter(Boolean).join('    ') + '    \u00b7    tap outside to close';
   }
   $('#diary .page-tap.right').addEventListener('click', () => {
-    if (diary.i < diary.spreads.length - 1) { diary.i++; renderDiary(); } else closeDiary();
+    if (diary.i < diary.spreads.length - 1) { diary.i++; renderDiary(); }
   });
   $('#diary .page-tap.left').addEventListener('click', () => {
     if (diary.i > 0) { diary.i--; renderDiary(); }
   });
-  $('#diary .diary-close').addEventListener('click', closeDiary);
   $('#diary .dim').addEventListener('click', closeDiary);
   function closeDiary() { $('#diary').classList.add('hidden'); diary = null; }
 
@@ -462,7 +462,7 @@
           <button class="choice" id="keep-btn"><span class="ico ico-arrow-l"></span><span class="lbl">Keep investigating</span></button>
           <button class="choice primary" id="submit-btn"><span class="lbl">Submit report</span><span class="ico ico-arrow-r"></span></button>
         </div>
-      </div>`);
+      </div>`, (e) => { if (!e.target.closest('.file')) hideCard(); });
     $('#keep-btn').addEventListener('click', (e) => { e.stopPropagation(); hideCard(); });
     $('#submit-btn').addEventListener('click', (e) => { e.stopPropagation(); ending(); });
   }

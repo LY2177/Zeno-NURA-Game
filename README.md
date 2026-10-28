@@ -67,6 +67,8 @@ Tip for playtesters on iPhone: open the link in Safari → Share → **Add to Ho
 4. Living room now has Grandma → Parents' room: Dad, hidden box in the bedside table
 5. Ask Dad about the box → confession → report
 
+Rooms are linked by tapping doors (in the living room: centre door = John's room, right-edge door = parents' room). Item cards and the diary close by tapping outside them.
+
 **Submit Report** (bottom-right) ends the game at any time. The outcome depends on whether Dad confessed.
 
 ## How questions unlock

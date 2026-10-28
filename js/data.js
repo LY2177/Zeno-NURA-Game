@@ -47,9 +47,10 @@ const SCENES = {
     bg: [-71, 0, 1583, 891],
     hotspots: [
       { id: 'trash', name: 'Trash Can', rect: [795, 535, 105, 135], action: { type: 'popup', id: 'wrapper' } },
-      { id: 'pdoor', name: "Parents' Room", rect: [1035, 160, 195, 425], action: { type: 'go', to: 'parents' } },
+      { id: 'jdoor', name: "Door to John's Room", rect: [1035, 160, 195, 425], action: { type: 'go', to: 'john' } },
+      { id: 'pdoor', name: "Door to Parents' Room", rect: [1425, 172, 87, 335], action: { type: 'go', to: 'parents' } },
     ],
-    exits: [{ label: "John's Room", side: 'left', to: 'john' }],
+    exits: [],
   },
 
   living_grandma: {
@@ -59,9 +60,10 @@ const SCENES = {
     hotspots: [
       { id: 'grandma', name: 'Grandma', rect: [685, 378, 160, 285], action: { type: 'talk', id: 'grandma' } },
       { id: 'trash', name: 'Trash Can', rect: [808, 588, 100, 125], action: { type: 'popup', id: 'wrapper' } },
-      { id: 'pdoor', name: "Parents' Room", rect: [1058, 172, 205, 455], action: { type: 'go', to: 'parents' } },
+      { id: 'jdoor', name: "Door to John's Room", rect: [1058, 172, 205, 455], action: { type: 'go', to: 'john' } },
+      { id: 'pdoor', name: "Door to Parents' Room", rect: [1440, 190, 72, 310], action: { type: 'go', to: 'parents' } },
     ],
-    exits: [{ label: "John's Room", side: 'left', to: 'john' }],
+    exits: [],
   },
 
   parents: {

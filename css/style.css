@@ -166,6 +166,8 @@ img { -webkit-user-drag: none; user-select: none; }
 .popup-body { margin: 0; font-size: 34px; line-height: 1.32; letter-spacing: .02em; white-space: pre-line; }
 .tap-hint { position: absolute; right: 44px; bottom: 26px; font-size: 26px; opacity: .55; letter-spacing: .05em; }
 .tap-hint.dark { color: var(--ink); }
+.outside-hint { position: absolute; left: 0; right: 0; text-align: center; font-size: 30px; letter-spacing: .06em; color: var(--mist); text-shadow: 0 2px 0 rgba(0,0,0,.6); pointer-events: none; }
+.popup-hint { top: 736px; }
 
 /* ---------- Diary ---------- */
 #diary .book { position: absolute; left: 253px; top: 92px; width: 1006px; height: 723px; animation: pop .22s ease-out; }
@@ -180,8 +182,7 @@ img { -webkit-user-drag: none; user-select: none; }
 #diary .page-tap { position: absolute; top: 92px; height: 723px; width: 503px; }
 #diary .page-tap.left { left: 253px; }
 #diary .page-tap.right { left: 756px; }
-#diary .diary-foot { position: absolute; left: 0; right: 0; top: 826px; text-align: center; font-size: 30px; letter-spacing: .06em; color: var(--mist); }
-#diary .diary-close { position: absolute; left: 1272px; top: 92px; }
+#diary .diary-foot { pointer-events: none; position: absolute; left: 0; right: 0; top: 826px; text-align: center; font-size: 30px; letter-spacing: .06em; color: var(--mist); }
 
 /* ---------- Conversation ---------- */
 .talk-bg { position: absolute; }

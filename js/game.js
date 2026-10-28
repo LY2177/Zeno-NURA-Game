@@ -418,7 +418,7 @@
         <dl class="meta">
           <dt>Subject</dt><dd>John, aged 6</dd>
           <dt>Referred by</dt><dd>Grandmother, Preschool</dd>
-          <dt>Opened</dt><dd>13 April 2066</dd>
+          <dt>Opened</dt><dd>13 April 2060</dd>
         </dl>
         <p>John's grandmother says he has changed. He doesn't remember her games, and he talks about days out that never happened. Visit the home, look around, and find out who is responsible.</p>
         <button class="choice primary" id="start-btn"><span class="lbl" style="flex:none">Open the case</span><span class="ico ico-arrow-r"></span></button>
@@ -436,7 +436,7 @@
     showCard(`
       <div class="skip">
         <div class="big">Six weeks later</div>
-        <div class="small">JUNE 2066 · FOLLOW-UP VISIT</div>
+        <div class="small">JUNE 2060 · FOLLOW-UP VISIT</div>
         <div class="tap">Tap to continue</div>
       </div>`, () => {
       hideCard();

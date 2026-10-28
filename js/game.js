@@ -19,7 +19,7 @@
       flags: {},
       scene: null,
       visited: {},
-      asked: {},            // "char:topic:option" or "...:f" for follow-ups
+      asked: {},            // "char:question" or "...:f" for follow-ups
       talkLog: {},          // conversation history per character
       seenGreeting: {},
     };
@@ -113,10 +113,14 @@
       const [x, y, w, hh] = h.rect;
       Object.assign(b.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: hh + 'px' });
       b.setAttribute('aria-label', h.name);
-      b.appendChild(el('span', 'hs-label', esc(h.name)));
+      const lbl = el('span', 'hs-label', esc(h.name));
+      // keep labels on screen for tap areas hugging the left/right edge
+      if (x + w > W - 160) lbl.classList.add('edge-r');
+      else if (x < 160) lbl.classList.add('edge-l');
+      b.appendChild(lbl);
       if (h.hidden && has('BOX_HINT')) b.classList.add('hinted', 'sparkle');
       if (h.action.type === 'talk') b.classList.add('person');
-      b.addEventListener('click', () => doAction(h.action));
+      b.addEventListener('click', () => { setFlag(h.flag); doAction(h.action); });
       wrap.appendChild(b);
     });
 
@@ -196,28 +200,37 @@
   $('#popup').addEventListener('click', () => popupClose && popupClose());
 
   // ---------- Diary ----------
+  // Entries are paired into spreads (left | right). The June diary holds the
+  // April entries too, so the player can flip back and compare.
   let diary = null;
   function openDiary(id) {
-    diary = { pages: DIARIES[id], i: 0 };
+    const d = DIARIES[id];
+    const pages = d.pages.map((i) => DIARY_PAGES[i]);
+    const spreads = [];
+    for (let i = 0; i < pages.length; i += 2) spreads.push([pages[i], pages[i + 1] || null]);
+    diary = { spreads, i: Math.floor(d.startPage / 2) };
     $('#diary').classList.remove('hidden');
     renderDiary();
   }
   function renderDiary() {
     const d = $('#diary');
-    const n = diary.pages.length, i = diary.i;
+    const n = diary.spreads.length, i = diary.i;
     const book = n === 1 ? 'book_mid' : i === 0 ? 'book_first' : i === n - 1 ? 'book_last' : 'book_mid';
     $('.book', d).src = `assets/ui/${book}.webp`;
-    const [L, R] = diary.pages[i];
-    const fill = (node, lines) => {
-      node.innerHTML = (lines || []).map((t) => t.startsWith('# ')
-        ? `<p class="date">${esc(t.slice(2))}</p>` : `<p>${esc(t)}</p>`).join('');
+    const [L, R] = diary.spreads[i];
+    const fill = (node, pg) => {
+      if (!pg) { node.innerHTML = ''; return; }
+      setFlag(pg.era === 'before' ? 'DIARY_BEFORE' : 'DIARY_AFTER');
+      node.innerHTML = `<p class="date">${esc(pg.date)}</p>` + pg.lines.map((t) => `<p>${esc(t)}</p>`).join('');
     };
     fill($('.page.left', d), L);
     fill($('.page.right', d), R);
-    $('.pg', d).textContent = `${i + 1} / ${n}   ·   tap a page to turn`;
+    const prev = i > 0 ? '\u25c0 tap left page' : '';
+    const next = i < n - 1 ? 'tap right page \u25b6' : '';
+    $('.pg', d).textContent = [prev, `${i + 1} / ${n}`, next].filter(Boolean).join('    ');
   }
   $('#diary .page-tap.right').addEventListener('click', () => {
-    if (diary.i < diary.pages.length - 1) { diary.i++; renderDiary(); } else closeDiary();
+    if (diary.i < diary.spreads.length - 1) { diary.i++; renderDiary(); } else closeDiary();
   });
   $('#diary .page-tap.left').addEventListener('click', () => {
     if (diary.i > 0) { diary.i--; renderDiary(); }
@@ -234,7 +247,7 @@
 
   function openTalk(id) {
     const c = CHARACTERS[id];
-    T = { id, c, topic: null, queue: [], typing: null, after: null };
+    T = { id, c, queue: [], typing: null, after: null };
     const sc = SCENES[S.scene];
     const bg = $('.talk-bg', talkEl);
     bg.src = c.sceneOverride || sc.img;
@@ -249,9 +262,9 @@
 
     if (!S.seenGreeting[id]) {
       S.seenGreeting[id] = true;
-      say(c.greet, showTopics);
+      say(c.greet, showQuestions);
     } else {
-      showTopics();
+      showQuestions();
     }
   }
 
@@ -282,9 +295,17 @@
     if (m) { addLine('q act', m[1]); addLine('q', m[2]); } else addLine('q', q);
   }
 
+  // The log box fills whatever space the choice buttons leave.
+  function sizeLog() {
+    const h = choicesEl.offsetHeight;
+    talkEl.style.setProperty('--choices-h', (h ? h + 22 + 14 : 30) + 'px');
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
   // Character lines, typed out one by one. Tap the box to skip.
   function say(lines, then) {
     choicesEl.innerHTML = '';
+    sizeLog();
     T.queue = lines.slice();
     T.after = then;
     nextLine();
@@ -331,67 +352,55 @@
     return b;
   }
 
-  const visibleTopics = () => T.c.topics.filter((t) => !t.req || has(t.req));
-  const visibleOptions = (topic) => topic.options.filter((o) => !o.req || has(o.req));
-  const key = (topic, o, f) => `${T.id}:${topic.id}:${o.id}${f ? ':f' : ''}`;
-  const optionDone = (topic, o) => S.asked[key(topic, o)] && (!o.follow || S.asked[key(topic, o, true)]);
-  const topicDone = (topic) => visibleOptions(topic).every((o) => optionDone(topic, o));
+  // A question shows once its clues are found, and disappears once fully asked.
+  // The button text is always exactly the line that gets said.
+  const key = (q, f) => `${T.id}:${q.id}${f ? ':f' : ''}`;
+  const unlocked = (q) => {
+    const all = [].concat(q.req || []);
+    return all.every(has) && (!q.any || q.any.some(has));
+  };
+  const fullyAsked = (q) => S.asked[key(q)] && (!q.follow || S.asked[key(q, true)]);
 
-  function showTopics() {
-    T.topic = null;
+  function showQuestions() {
     choicesEl.className = 'talk-choices';
     choicesEl.innerHTML = '';
-    visibleTopics().forEach((t) => {
-      choicesEl.appendChild(choiceBtn(t.label, { asked: topicDone(t) }, () => showOptions(t)));
+    const open = T.c.questions.filter((q) => unlocked(q) && !fullyAsked(q));
+    // Follow-ups first, so the conversation reads on naturally.
+    open.sort((a, b) => (S.asked[key(b)] ? 1 : 0) - (S.asked[key(a)] ? 1 : 0));
+    open.forEach((q) => {
+      if (S.asked[key(q)]) choicesEl.appendChild(choiceBtn(q.follow.q, {}, () => askFollow(q)));
+      else choicesEl.appendChild(choiceBtn(q.q, {}, () => askQuestion(q)));
     });
-    const n = visibleTopics().length;
-    choicesEl.appendChild(choiceBtn('Leave', { icon: 'arrow-l', cls: n % 2 === 0 ? 'wide' : '' }, closeTalk));
-  }
-
-  function showOptions(topic, pendingFollow) {
-    T.topic = topic;
-    choicesEl.className = 'talk-choices questions';
-    choicesEl.innerHTML = '';
-    if (pendingFollow) {
-      const { o } = pendingFollow;
-      choicesEl.appendChild(choiceBtn(o.follow.q, { asked: S.asked[key(topic, o, true)] }, () => askFollow(topic, o)));
+    if (!open.length) {
+      const hint = el('div', 'no-more', 'Nothing more to ask for now. Keep looking around.');
+      choicesEl.appendChild(hint);
     }
-    visibleOptions(topic).forEach((o) => {
-      if (pendingFollow && pendingFollow.o === o) return;
-      const done = S.asked[key(topic, o)];
-      // Re-asking an answered question offers its follow-up instead, if not yet asked.
-      choicesEl.appendChild(choiceBtn(o.q, { asked: optionDone(topic, o) }, () => {
-        if (done && o.follow && !S.asked[key(topic, o, true)]) return askFollow(topic, o);
-        askOption(topic, o);
-      }));
-    });
-    choicesEl.appendChild(choiceBtn('Back', { icon: 'arrow-l' }, showTopics));
+    choicesEl.appendChild(choiceBtn('Leave', { icon: 'arrow-l' }, closeTalk));
+    sizeLog();
   }
 
-  function askOption(topic, o) {
-    S.asked[key(topic, o)] = true;
-    setFlag(o.flag);
-    ask(o.q);
-    say(o.a, () => {
-      if (o.follow && !S.asked[key(topic, o, true)]) showOptions(topic, { o });
-      else showOptions(topic);
-    });
+  function askQuestion(q) {
+    S.asked[key(q)] = true;
+    setFlag(q.flag);
+    ask(q.q);
+    say(q.a, showQuestions);
   }
 
-  function askFollow(topic, o) {
-    S.asked[key(topic, o, true)] = true;
-    setFlag(o.follow.flag);
-    ask(o.follow.q);
-    if (o.follow.confess) {
+  function askFollow(q) {
+    S.asked[key(q, true)] = true;
+    setFlag(q.follow.flag);
+    ask(q.follow.q);
+    if (q.follow.confess) {
       setFlag('CONFESSED');
       say(CONFESSION, () => {
-        choicesEl.className = 'talk-choices single';
+        choicesEl.className = 'talk-choices';
         choicesEl.innerHTML = '';
-        choicesEl.appendChild(choiceBtn('Close the case', { cls: 'primary' }, () => { closeTalk(); ending(); }));
+        choicesEl.appendChild(choiceBtn('Submit report', { cls: 'primary' }, () => { closeTalk(); ending(); }));
+        sizeLog();
       });
       return;
     }
-    say(o.follow.a, () => showOptions(topic));
+    say(q.follow.a, showQuestions);
   }
 
   // ---------- Cards ----------
@@ -440,9 +449,36 @@
     });
   }
 
+  // Submit report: ask to confirm, then show the outcome.
+  function confirmReport() {
+    hideToast();
+    const found = FINDINGS.filter((f) => has(f.flag)).length;
+    showCard(`
+      <div class="file dark-panel confirm">
+        <div class="caseno">CASE NO. 24346957</div>
+        <h2>Submit your report?</h2>
+        <p>This ends the investigation with what you've found so far (${found} of ${FINDINGS.length} findings).</p>
+        <div class="row">
+          <button class="choice" id="keep-btn"><span class="ico ico-arrow-l"></span><span class="lbl">Keep investigating</span></button>
+          <button class="choice primary" id="submit-btn"><span class="lbl">Submit report</span><span class="ico ico-arrow-r"></span></button>
+        </div>
+      </div>`);
+    $('#keep-btn').addEventListener('click', (e) => { e.stopPropagation(); hideCard(); });
+    $('#submit-btn').addEventListener('click', (e) => { e.stopPropagation(); ending(); });
+  }
+  $('#report-btn').addEventListener('click', confirmReport);
+
   function ending() {
     const items = FINDINGS.map((f) => `<li class="${has(f.flag) ? 'found' : 'missed'}"><span class="box"></span><span>${esc(f.text)}</span></li>`).join('');
     const found = FINDINGS.filter((f) => has(f.flag)).length;
+    const solved = has('CONFESSED');
+    const outcome = solved
+      ? `<div class="stamp">INCONCLUSIVE \u2014 MONITORING RECOMMENDED</div>
+         <p>NURA use is confirmed, but there is no way to prove which of John's memories are real. The case stays open, with a review in 12 weeks.</p>
+         <p class="epilogue">\u201cDaddy said we're going to the park this weekend! For real this time.\u201d \u2014 John</p>`
+      : `<div class="stamp">CLOSED \u2014 INSUFFICIENT EVIDENCE</div>
+         <p>Without proof of who gave John the patches, the report goes nowhere. The family keeps its secret.</p>
+         <p class="epilogue">Something in this house was hidden. Try again and look closer.</p>`;
     showCard(`
       <img class="card-bg" src="assets/scenes/john_after.webp" alt="">
       <div class="file end dark-panel">
@@ -450,9 +486,7 @@
         <h2>Findings ${found} / ${FINDINGS.length}</h2>
         <ul class="findings">${items}</ul>
         <div>
-          <div class="stamp">INCONCLUSIVE \u2014 MONITORING RECOMMENDED</div>
-          <p>NURA use is confirmed, but there is no way to prove which of John's memories are real. The case stays open, with a review in 12 weeks.</p>
-          <p class="epilogue">\u201cDaddy said we're going to the park this weekend! For real this time.\u201d \u2014 John</p>
+          ${outcome}
           <button class="choice primary" id="again-btn"><span class="lbl" style="flex:none">Play again</span><span class="ico ico-arrow-r"></span></button>
         </div>
       </div>`);

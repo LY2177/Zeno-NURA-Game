@@ -34,7 +34,6 @@ const SCENES = {
       { id: 'diary', name: 'Diary', rect: [960, 495, 165, 105], action: { type: 'diary', id: 'after' } },
       { id: 'ball', name: 'Soccer Ball', rect: [1105, 20, 165, 145], flag: 'SEEN_BALL', action: { type: 'popup', id: 'ball' } },
       { id: 'poster', name: 'Posters', rect: [85, 0, 225, 285], flag: 'SEEN_POSTERS', action: { type: 'popup', id: 'poster' } },
-      { id: 'poster2', name: 'Posters', rect: [1025, 330, 100, 120], flag: 'SEEN_POSTERS', action: { type: 'popup', id: 'poster' } },
       { id: 'clock', name: 'Clock', rect: [550, 465, 110, 75], flag: 'SEEN_POSTERS', action: { type: 'note', text: 'A digital clock sits where the dinosaur plushie used to be.' } },
       { id: 'door', name: 'Door to Living Room', rect: [1415, 0, 97, 892], action: { type: 'go', to: 'living' } },
     ],
@@ -73,7 +72,6 @@ const SCENES = {
     hotspots: [
       { id: 'dad', name: 'Dad', rect: [120, 190, 205, 510], action: { type: 'talk', id: 'dad' } },
       { id: 'box', name: 'Bedside Table', rect: [1120, 465, 165, 95], hidden: true, action: { type: 'popup', id: 'nura_box' } },
-      { id: 'lamp', name: 'Lamp', rect: [1125, 320, 110, 150], action: { type: 'note', text: "Mum's side of the bed. Neatly made. Working late again." } },
       { id: 'door', name: 'Door to Living Room', rect: [1380, 15, 95, 690], action: { type: 'go', to: 'living' } },
     ],
     exits: [],
@@ -109,7 +107,7 @@ const ITEMS = {
   },
   nura_box: {
     title: 'Unopened Box of NURA',
-    body: "Hidden in the bedside table. Why do they have so many NURA patches?\n\nA slip on the lid: \"Custom memory: outings with Mum & Dad, park, soccer. Recipient: John, age 6.\"",
+    body: "Hidden in the bedside table. Why do they have so many NURA patches?\n\nA slip on the lid: \"Custom memory: outings with Mum & Dad, park, soccer.\"",
     imgs: [{ src: 'assets/items/nura_box.webp', w: 330, rot: -2.4 }],
     flag: 'BOX',
   },
@@ -155,7 +153,7 @@ const CHARACTERS = {
       { id: 'football', req: 'DIARY_AFTER',
         q: 'Your diary says Daddy took you to play football.',
         a: ['Uh-huh! Mummy took a picture. I think they like doing things with me now.'],
-        follow: { q: 'Now?', a: ['I mean... always. We always did.'] } },
+        follow: { q: 'Was that the first time?', a: ['No, we always play! Since I was little.', '...I think.'] } },
       { id: 'dino', any: ['DIARY_BEFORE', 'SEEN_GAMES', 'SEEN_DINO'],
         q: 'You used to play a dinosaur game with Grandma.',
         a: ["I did? I don't play dinosaur games. Those are for babies."],
@@ -236,8 +234,8 @@ const CHARACTERS = {
         flag: 'DAD_MEMORY' },
       { id: 'box', req: 'BOX',
         q: 'Care to explain this box?',
-        a: ['Where did you— That\'s private.'],
-        follow: { q: "The slip says: 'Outings with Mum & Dad. Recipient: John, age 6.'", confess: true } },
+        a: ['Where did you— That\'s private. They\'re mine.'],
+        follow: { q: "Outings with Mum and Dad, the park, soccer. That's everything John remembers now.", confess: true } },
     ],
   },
 };
@@ -252,7 +250,7 @@ const CONFESSION = [
 // Shown on the report screen. Checked if the player found it.
 const FINDINGS = [
   { flag: 'CONFESSED', text: 'Parents admitted to giving John NURA patches' },
-  { flag: 'BOX', text: 'Found a hidden supply of patches made for John' },
+  { flag: 'BOX', text: 'Found a hidden box of custom memory patches' },
   { flag: 'MISSING_MEMORY', text: 'John can no longer remember his time with Grandma' },
   { flag: 'NEGLECT', text: "John missed school while Grandma was in hospital" },
   { flag: 'JOHN_STICKER', text: 'John described the patch as a "sticker" from Dad' },

@@ -118,7 +118,7 @@
       if (x + w > W - 160) lbl.classList.add('edge-r');
       else if (x < 160) lbl.classList.add('edge-l');
       b.appendChild(lbl);
-      if (h.hidden && has('BOX_HINT')) b.classList.add('hinted', 'sparkle');
+      if (h.hidden && has('BOX_HINT')) b.classList.add('hinted');
       if (h.action.type === 'talk') b.classList.add('person');
       b.addEventListener('click', () => { setFlag(h.flag); doAction(h.action); });
       wrap.appendChild(b);
@@ -275,6 +275,8 @@
     talkEl.classList.add('hidden');
     T = null;
     renderScene();
+    // Nudge towards the report button once, after the confession.
+    if (has('CONFESSED') && !has('NUDGED')) { setFlag('NUDGED'); setTimeout(() => note('I have what I need. Time to submit my report.'), 300); }
   }
 
   function lineKind(t) { return /^\(.*\)$/.test(t.trim()) ? 'act' : 'a'; }
@@ -392,12 +394,7 @@
     ask(q.follow.q);
     if (q.follow.confess) {
       setFlag('CONFESSED');
-      say(CONFESSION, () => {
-        choicesEl.className = 'talk-choices';
-        choicesEl.innerHTML = '';
-        choicesEl.appendChild(choiceBtn('Submit report', { cls: 'primary' }, () => { closeTalk(); ending(); }));
-        sizeLog();
-      });
+      say(CONFESSION, showQuestions);
       return;
     }
     say(q.follow.a, showQuestions);
